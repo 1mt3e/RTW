@@ -512,6 +512,7 @@
             font-weight: 800;
             color: #ffffff;
             text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+            position: relative;
         }
 
         .question-emoji {
@@ -844,10 +845,85 @@
                 padding: 25px 15px;
             }
         }
+        
+        body.theme-hard {
+            background: linear-gradient(135deg, #2b0000 0%, #6e0000 50%, #1a0000 100%) !important;
+            animation: gradientBg 10s ease infinite;
+        }
+        body.shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both !important;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-5px, 0, 0); }
+            20%, 80% { transform: translate3d(5px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-10px, 0, 0); }
+            40%, 60% { transform: translate3d(10px, 0, 0); }
+        }
+        .survivor-counter {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid var(--text-yellow);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.5rem;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .survivor-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Fredoka One', cursive;
+            transition: 0.2s;
+        }
+        .survivor-btn:hover { background: var(--text-yellow); color: #000; }
+        
+        .times-up-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-family: 'Fredoka One', cursive;
+            font-size: 12rem;
+            color: var(--wrong);
+            text-shadow: 0 10px 0 #a3222f, 0 20px 30px rgba(0,0,0,0.8);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .times-up-overlay.show {
+            animation: zoomInBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes zoomInBounce {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body>
+
+    <div class="survivor-counter">
+        Survivors: <span id="survivor-count">100</span>
+        <button class="survivor-btn" onclick="updateSurv(-1)">-</button>
+        <button class="survivor-btn" onclick="updateSurv(1)">+</button>
+    </div>
+    <div id="times-up-overlay" class="times-up-overlay">TIME'S UP!</div>
 
     <div class="shooting-star st1"></div>
     <div class="shooting-star st2"></div>
@@ -1054,6 +1130,17 @@
         const sfxWrong = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3');
         const sfxReveal = new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
         const bgMusic = new Audio('https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3');
+        const sfxTick = new Audio('https://assets.mixkit.co/active_storage/sfx/2507/2507-preview.mp3');
+        const sfxDrumroll = new Audio('https://assets.mixkit.co/active_storage/sfx/566/566-preview.mp3');
+        const sfxCheer = new Audio('https://assets.mixkit.co/active_storage/sfx/505/505-preview.mp3');
+        const sfxTimesUp = new Audio('https://assets.mixkit.co/active_storage/sfx/2870/2870-preview.mp3'); // Light ringing bell for time out
+
+        let survivorCount = 100;
+        function updateSurv(change) {
+            survivorCount += change;
+            if (survivorCount < 0) survivorCount = 0;
+            document.getElementById('survivor-count').innerText = survivorCount;
+        }
 
         bgMusic.loop = true;
         bgMusic.volume = 0.15;
@@ -1110,8 +1197,7 @@
                 { q: "Closest meaning to “rapid”.", options: ["Slow", "Fast", "Late", "Weak"], correct: 1 },
                 { q: "Synonym of “important”.", options: ["Necessary", "Small", "Weak", "Short"], correct: 0 },
                 { q: "Opposite of “increase”.", options: ["Grow", "Decrease", "Rise", "Expand"], correct: 1 },
-                { q: "“Volunteer” means:", options: ["Work for money", "Work alone", "Work abroad", "Work for free"], correct: 3 },
-                { q: "“Environment” means:", options: ["People", "Surroundings", "Language", "Weather only"], correct: 1 }
+                { q: "“Volunteer” means:", options: ["Work for money", "Work alone", "Work abroad", "Work for free"], correct: 3 }
             ],
             medium: [
                 { q: "The manager decided to _______ the meeting due to unexpected issues.", options: ["call off", "put up", "turn on", "bring about"], correct: 0 },
@@ -1161,7 +1247,9 @@
                 { q: "Synonym of “significant”:", options: ["important", "small", "unclear", "simple"], correct: 0 },
                 { q: "Opposite of “expand”:", options: ["increase", "develop", "reduce", "grow"], correct: 2 },
                 { q: "“Entrepreneur” means:", options: ["a worker", "a business owner", "a student", "a teacher"], correct: 1 },
-                { q: "“Innovation” refers to:", options: ["repetition", "creativity and new ideas", "tradition", "habit"], correct: 1 }
+                { q: "“Innovation” refers to:", options: ["repetition", "creativity and new ideas", "tradition", "habit"], correct: 1 },
+                { q: "My brother _______ a new car last month.", options: ["buys", "has bought", "bought", "will buy"], correct: 2 },
+                { q: "Water boils at _______ degrees Celsius.", options: ["50", "90", "100", "120"], correct: 2 }
             ],
             hard: [
                 { q: "Before publishing their research, the scientists needed to ______ their findings. (Hint: confirm something is accurate or true)", options: ["delay", "invent", "validate", "ignore"], correct: 2 },
@@ -1268,6 +1356,7 @@
         function startRound(level) {
             currentLevel = level;
             currentQIndex = 0;
+            document.body.classList.remove('theme-hard');
 
             if (level === 'rescue') {
                 showScreen('rescue-screen');
@@ -1300,6 +1389,7 @@
             badge.innerText = currentLevel.toUpperCase() + ' ROUND';
             badge.style.background = `linear-gradient(145deg, rgba(255,255,255,0.25), transparent), ${config[level].color}`;
             badge.style.color = 'white';
+            if (level === 'hard') document.body.classList.add('theme-hard');
         }
 
         function runCountdown(overlayId, numberId, callback) {
@@ -1391,7 +1481,6 @@
                 options[qData.correct].classList.add('correct');
                 playSound(sfxWrong);
             }
-
             document.getElementById('next-btn').style.display = 'block';
         }
 
@@ -1401,8 +1490,12 @@
             if (currentQIndex < quizData[currentLevel].length) {
                 loadQuestion();
             } else {
-                alert(`Round Complete! Great job.`);
-                showScreen('level-screen');
+                confetti({ particleCount: 200, spread: 160, origin: { y: 0.2 }, zIndex: 9999 });
+                playSound(sfxCheer);
+                setTimeout(() => {
+                    alert(`Round Complete! Great job.`);
+                    showScreen('level-screen');
+                }, 1000);
             }
         }
 
@@ -1430,6 +1523,7 @@
             playSound(sfxReveal);
             document.getElementById('rescue-answer').style.display = 'block';
             document.getElementById('reveal-btn').style.display = 'none';
+            confetti({ particleCount: 150, zIndex: 9999 });
         }
 
         function nextRescueQuestion() {
@@ -1438,8 +1532,12 @@
             if (currentQIndex < quizData['rescue'].length) {
                 loadRescueQuestion();
             } else {
-                alert("Rescue Round Finished!");
-                showScreen('level-screen');
+                confetti({ particleCount: 200, spread: 160, origin: { y: 0.2 }, zIndex: 9999 });
+                playSound(sfxCheer);
+                setTimeout(() => {
+                    alert("Rescue Round Finished!");
+                    showScreen('level-screen');
+                }, 1000);
             }
         }
 
@@ -1516,8 +1614,12 @@
             if (currentQIndex < quizData['minigame'].length) {
                 loadMinigameQuestion();
             } else {
-                alert("Minigame Finished!");
-                showScreen('level-screen');
+                confetti({ particleCount: 200, spread: 160, origin: { y: 0.2 }, zIndex: 9999 });
+                playSound(sfxCheer);
+                setTimeout(() => {
+                    alert("Minigame Finished!");
+                    showScreen('level-screen');
+                }, 1000);
             }
         }
 
@@ -1572,9 +1674,12 @@
         function timeOut() {
             if (isAnswered) return;
             isAnswered = true;
-            playSound(sfxWrong);
+            
+            playSound(sfxTimesUp);
+            
             const qData = quizData[currentLevel][currentQIndex];
             document.querySelectorAll('.option')[qData.correct].classList.add('correct');
+            playSound(sfxCorrect);
             document.getElementById('next-btn').style.display = 'block';
         }
     </script>
