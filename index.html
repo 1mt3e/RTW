@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RING TO WIN - FPTU QUY NHON</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* Palette lấy từ Poster & Bright 3D Theme */
+            --bg-blue-light: #6fb1fc;
+            --bg-purple-dark: #4338ca;
+
+            /* Màu khung câu hỏi bạn yêu cầu */
+            --panel-tint: #5944d4;
+
+            --text-yellow: #ffde59;
+            --text-orange: #ff914d;
+            --text-dark: #1e272e;
+            --border-color: #ffffff;
+
+            --easy: #00d285;
+            --medium: #ffb100;
+            --hard: #ff4757;
+            --rescue: #00a8ff;
+            --correct: #10ac84;
+            --wrong: #ff4757;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        body {
+            /* Nền gradient xanh tím sáng mô phỏng poster có thêm hiệu ứng chuyển động */
+            background: linear-gradient(135deg, var(--bg-blue-light) 0%, var(--bg-purple-dark) 50%, #211661 100%);
+            background-size: 200% 200%;
+            animation: gradientBg 10s ease infinite;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        @keyframes gradientBg {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Lưới nền chéo (Grid pattern) giống poster */
+        body::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            right: -50%;
+            bottom: -50%;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 60px 60px;
+            transform: perspective(500px) rotateX(20deg);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Ánh sáng sao băng lướt qua */
+        .shooting-star {
+            position: absolute;
+            width: 150px;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 1));
+            transform: rotate(-45deg);
+            animation: shoot 4s infinite linear;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        .st1 {
+            top: 10%;
+            right: 20%;
+            animation-delay: 0s;
+        }
+
+        .st2 {
+            top: 30%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .st3 {
+            bottom: 20%;
+            left: 10%;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translateX(200px) translateY(-200px) rotate(-45deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(-1000px) translateY(1000px) rotate(-45deg);
+                opacity: 0;
+            }
+        }
+
+        /* Khung chứa các trang */
+        .screen {
+            display: none;
+            width: 95%;
+            max-width: 950px;
+            z-index: 10;
+            animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .screen::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .screen::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes zoomIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* -----------------------------------------------------------------
+           Glassmorphism Panel (Blur Transparent + #5944d4 tint)
+           ----------------------------------------------------------------- */
+        .panel-3d {
+            background: linear-gradient(135deg, rgba(89, 68, 212, 0.6) 0%, rgba(89, 68, 212, 0.25) 100%);
+            /* Mã màu #5944d4 kèm độ trong suốt */
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 30px;
+            padding: 40px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        /* Typography - Poster Style Title */
+        .title-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: -10px;
+            z-index: 2;
+        }
+
+        /* Căn đều chữ cong bằng CSS chuẩn, không bị lệch */
+        .title-container span {
+            font-family: 'Fredoka One', cursive;
+            font-size: 5rem;
+            color: var(--text-yellow);
+            text-transform: uppercase;
+            text-shadow:
+                0 4px 0 var(--text-orange),
+                0 8px 0 #d35400,
+                0 15px 20px rgba(0, 0, 0, 0.5);
+            display: inline-block;
+            animation: floatText 3s ease-in-out infinite;
+        }
+
+        /* Hiệu ứng chữ uốn lượn hình vòng cung */
+        .title-container span:nth-child(1) {
+            transform: translateY(15px) rotate(-12deg);
+            animation-delay: 0.1s;
+        }
+
+        .title-container span:nth-child(2) {
+            transform: translateY(5px) rotate(-6deg);
+            animation-delay: 0.2s;
+        }
+
+        .title-container span:nth-child(3) {
+            transform: translateY(-2px) rotate(-2deg);
+            animation-delay: 0.3s;
+        }
+
+        .title-container span:nth-child(4) {
+            transform: translateY(-5px) rotate(2deg);
+            animation-delay: 0.4s;
+            margin-right: 25px;
+        }
+
+        .title-container span:nth-child(5) {
+            transform: translateY(-5px) rotate(-4deg);
+            animation-delay: 0.5s;
+        }
+
+        .title-container span:nth-child(6) {
+            transform: translateY(-2px) rotate(4deg);
+            animation-delay: 0.6s;
+            margin-right: 25px;
+        }
+
+        .title-container span:nth-child(7) {
+            transform: translateY(-2px) rotate(-2deg);
+            animation-delay: 0.7s;
+        }
+
+        .title-container span:nth-child(8) {
+            transform: translateY(5px) rotate(6deg);
+            animation-delay: 0.8s;
+        }
+
+        .title-container span:nth-child(9) {
+            transform: translateY(15px) rotate(12deg);
+            animation-delay: 0.9s;
+        }
+
+        @keyframes floatText {
+
+            0%,
+            100% {
+                margin-top: 0;
+            }
+
+            50% {
+                margin-top: -10px;
+            }
+        }
+
+        /* The Giant Bell & Floating Icons */
+        .hero-graphics {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .giant-bell {
+            font-size: 11rem;
+            filter: drop-shadow(0 20px 20px rgba(0, 0, 0, 0.5));
+            animation: ringBell 2s infinite cubic-bezier(.36, .07, .19, .97) both;
+            transform-origin: top center;
+            z-index: 5;
+        }
+
+        @keyframes ringBell {
+
+            0%,
+            100% {
+                transform: rotate(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: rotate(-10deg);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: rotate(10deg);
+            }
+        }
+
+        .float-icon {
+            position: absolute;
+            font-size: 4rem;
+            filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.4));
+            animation: floatItem 4s ease-in-out infinite;
+        }
+
+        .ic-star1 {
+            top: 20px;
+            left: 15%;
+            font-size: 3rem;
+            animation-delay: 0s;
+        }
+
+        .ic-star2 {
+            bottom: 30px;
+            right: 15%;
+            font-size: 4rem;
+            animation-delay: 1s;
+        }
+
+        .ic-map {
+            bottom: 50px;
+            left: 5%;
+            font-size: 5rem;
+            animation-delay: 2s;
+            transform: rotate(-15deg);
+        }
+
+        .ic-book {
+            bottom: -20px;
+            left: 25%;
+            font-size: 6rem;
+            animation-delay: 0.5s;
+        }
+
+        .ic-translate {
+            top: 50px;
+            right: 10%;
+            font-size: 5rem;
+            animation-delay: 1.5s;
+            transform: rotate(15deg);
+        }
+
+        @keyframes floatItem {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(10deg);
+            }
+        }
+
+        /* Event Info Footer */
+        .event-info {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 15px 30px;
+            display: inline-block;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .event-time {
+            font-family: 'Fredoka One', cursive;
+            font-size: 2.5rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .event-time span {
+            color: var(--text-yellow);
+            font-size: 1.5rem;
+        }
+
+        .event-location {
+            font-weight: 800;
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+
+        /* 3D Buttons */
+        .btn {
+            font-family: 'Fredoka One', cursive;
+            background: #ffffff;
+            color: var(--panel-tint);
+            font-size: 1.3rem;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 6px 0 #b2bec3, 0 10px 20px rgba(0, 0, 0, 0.3);
+            margin: 10px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+        }
+
+        .btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 #b2bec3, 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .level-btns {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .btn-easy {
+            background: linear-gradient(145deg, #18e597, var(--easy));
+            color: white;
+            box-shadow: 0 6px 0 #0b8758, 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-easy:active {
+            box-shadow: 0 0px 0 #0b8758;
+        }
+
+        .btn-medium {
+            background: linear-gradient(145deg, #ffc833, var(--medium));
+            color: white;
+            box-shadow: 0 6px 0 #d35400, 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-medium:active {
+            box-shadow: 0 0px 0 #d35400;
+        }
+
+        .btn-hard {
+            background: linear-gradient(145deg, #ff6b7e, var(--hard));
+            color: white;
+            box-shadow: 0 6px 0 #c0392b, 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-hard:active {
+            box-shadow: 0 0px 0 #c0392b;
+        }
+
+        .btn-rescue {
+            background: linear-gradient(145deg, #33b8ff, var(--rescue));
+            color: white;
+            box-shadow: 0 6px 0 #0984e3, 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-rescue:active {
+            box-shadow: 0 0px 0 #0984e3;
+        }
+
+        .btn-minigame {
+            background: linear-gradient(145deg, #a020f0, #ff00ff);
+            color: white;
+            box-shadow: 0 6px 0 #800080, 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-minigame:active {
+            box-shadow: 0 0px 0 #800080;
+        }
+
+        /* Quiz Layout */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed rgba(255, 255, 255, 0.4);
+        }
+
+        .q-selector {
+            font-family: 'Fredoka One', cursive;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .q-selector option {
+            background: var(--panel-tint);
+            color: white;
+        }
+
+        .badge {
+            font-family: 'Fredoka One', cursive;
+            padding: 10px 25px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .question-text {
+            font-size: 2.2rem;
+            margin-bottom: 30px;
+            line-height: 1.4;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+        }
+
+        .question-emoji {
+            font-size: 3.5rem;
+            display: block;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3));
+        }
+
+        /* Action Area */
+        .action-area {
+            position: relative;
+        }
+
+        /* COUNTDOWN OVERLAY */
+        .countdown-overlay {
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+            background: linear-gradient(135deg, rgba(89, 68, 212, 0.95), rgba(89, 68, 212, 0.75));
+            /* Tinted blur for overlay */
+            backdrop-filter: blur(8px);
+            border-radius: 30px;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .countdown-number {
+            font-family: 'Fredoka One', cursive;
+            font-size: 10rem;
+            color: var(--text-yellow);
+            text-shadow: 0 10px 0 var(--text-orange), 0 20px 30px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+        }
+
+        .pop-anim {
+            animation: popCount 1s ease-in-out forwards;
+        }
+
+        @keyframes popCount {
+            0% {
+                transform: scale(0.3) rotate(-15deg);
+                opacity: 0;
+            }
+
+            40% {
+                transform: scale(1.2) rotate(10deg);
+                opacity: 1;
+            }
+
+            80% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.95);
+            /* Khối đáp án màu trắng để dễ đọc */
+            color: var(--panel-tint);
+            border: 3px solid #fff;
+            padding: 20px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            text-align: left;
+            box-shadow: 0 6px 0 #b2bec3;
+        }
+
+        .option:hover {
+            transform: translateY(2px);
+            box-shadow: 0 4px 0 #b2bec3;
+        }
+
+        .option:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #b2bec3;
+        }
+
+        .option.correct {
+            background: linear-gradient(145deg, #1cd6a8, var(--correct));
+            color: white;
+            border-color: var(--correct);
+            box-shadow: 0 6px 0 #0b8758;
+        }
+
+        .option.wrong {
+            background: linear-gradient(145deg, #ff6b7e, var(--wrong));
+            color: white;
+            border-color: var(--wrong);
+            box-shadow: 0 6px 0 #a3222f;
+            opacity: 0.9;
+        }
+
+        .opt-letter {
+            font-family: 'Fredoka One', cursive;
+            background: var(--text-yellow);
+            color: #d35400;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            margin-right: 15px;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 0 #d35400;
+            flex-shrink: 0;
+        }
+
+        /* Timer UI */
+        .timer-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .timer-container {
+            flex-grow: 1;
+            height: 25px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .timer-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--text-yellow), var(--text-orange));
+            width: 100%;
+            border-radius: 15px;
+            will-change: width;
+        }
+
+        .btn-control {
+            font-family: 'Fredoka One', cursive;
+            background: #fff;
+            color: var(--panel-tint);
+            border: none;
+            border-radius: 15px;
+            padding: 10px 20px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #b2bec3;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .btn-control:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #b2bec3;
+        }
+
+        .btn-control.paused {
+            background: linear-gradient(145deg, #ff6b7e, var(--hard));
+            color: white;
+            box-shadow: 0 5px 0 #c0392b;
+        }
+
+        /* Rescue Area */
+        .rescue-answer-area {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: #fff;
+            white-space: pre-line;
+            display: none;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid var(--correct);
+            font-weight: 800;
+        }
+
+        /* Modal for Rules */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, rgba(89, 68, 212, 0.95), rgba(67, 56, 202, 0.95));
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #fff;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            text-align: left;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+        .modal-content h2 {
+            font-family: 'Fredoka One', cursive;
+            color: var(--text-yellow);
+            text-shadow: 0 2px 0 var(--text-orange);
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 2rem;
+        }
+        .modal-content h3 {
+            color: #18e597;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-size: 1.2rem;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
+            padding-bottom: 5px;
+        }
+        .modal-content ul {
+            list-style: none;
+            margin-bottom: 10px;
+        }
+        .modal-content li {
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        .modal-content li::before {
+            content: "⭐";
+            position: absolute;
+            left: 0;
+            top: 2px;
+            font-size: 0.8rem;
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .modal-close-btn:hover {
+            color: var(--text-orange);
+        }
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .modal-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .title-container span {
+                font-size: 3rem;
+            }
+
+            .giant-bell {
+                font-size: 8rem;
+            }
+
+            .float-icon {
+                display: none;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .question-text {
+                font-size: 1.6rem;
+            }
+
+            .panel-3d {
+                padding: 25px 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="shooting-star st1"></div>
+    <div class="shooting-star st2"></div>
+    <div class="shooting-star st3"></div>
+
+    <div id="home-screen" class="screen active">
+        <div class="title-container">
+            <span>R</span><span>I</span><span>N</span><span>G</span>
+            <span>T</span><span>O</span>
+            <span>W</span><span>I</span><span>N</span>
+        </div>
+
+        <div class="hero-graphics">
+            <div class="float-icon ic-star1">⭐</div>
+            <div class="float-icon ic-map">📍</div>
+            <div class="giant-bell">🔔</div>
+            <div class="float-icon ic-book">📖</div>
+            <div class="float-icon ic-translate">🔠</div>
+            <div class="float-icon ic-star2">⭐</div>
+        </div>
+
+        <div class="event-info" style="margin-bottom: 30px;">
+            <div class="event-time">8:00 <span>AM</span> &nbsp;&nbsp;|&nbsp;&nbsp; 04 <span>APRIL 2026</span></div>
+            <div class="event-location">HALL B, FPT UNIVERSITY QUY NHON A.I CAMPUS</div>
+        </div>
+
+        <button class="btn" style="font-size: 1.8rem; padding: 20px 60px;" onclick="showScreen('level-screen')">PLAY NOW
+            🎮</button>
+        <button class="btn" style="font-size: 1.2rem; padding: 15px 40px; background: rgba(255,255,255,0.2); color: #fff; box-shadow: none; margin-top: 0;" onclick="toggleRules()">📜 RULES</button>
+    </div>
+
+    <div id="level-screen" class="screen">
+        <div class="panel-3d">
+            <h1
+                style="font-family: 'Fredoka One', cursive; font-size: 3.5rem; text-shadow: 0 4px 0 #ccc, 0 8px 20px rgba(0,0,0,0.3); margin-bottom: 40px;">
+                SELECT ROUND</h1>
+            <div class="level-btns">
+                <button class="btn btn-easy" onclick="startRound('easy')">ROUND 1: EASY</button>
+                <button class="btn btn-medium" onclick="startRound('medium')">ROUND 2: MEDIUM</button>
+                <button class="btn btn-hard" onclick="startRound('hard')">ROUND 3: HARD</button>
+                <button class="btn btn-rescue" onclick="startRound('rescue')">RESCUE ROUND</button>
+                <button class="btn btn-minigame" onclick="startRound('minigame')">MINIGAME</button>
+            </div>
+            <button class="btn"
+                style="margin-top: 40px; font-size: 1rem; background: rgba(255,255,255,0.2); color: #fff; box-shadow: none;"
+                onclick="showScreen('home-screen')">🔙 Back to Home</button>
+        </div>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="panel-3d">
+            <div class="quiz-header">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div id="q-display" style="font-family: 'Fredoka One', cursive; font-size: 1.5rem; color: var(--text-yellow);">Question 01</div>
+                    <select id="q-selector" class="q-selector" onchange="jumpToQuestion(this.value)"></select>
+                </div>
+                <div class="badge" id="round-badge">EASY</div>
+            </div>
+
+            <div class="question-text" id="question-text">
+                <span class="question-emoji" id="q-emoji">✨</span>
+                <span id="q-text-content">Question goes here?</span>
+            </div>
+
+            <div class="action-area" id="quiz-action-area">
+                <div id="countdown-overlay" class="countdown-overlay">
+                    <div class="countdown-number" id="countdown-number">3</div>
+                </div>
+
+                <div class="options-grid" id="options-grid"></div>
+
+                <div class="timer-wrapper">
+                    <button class="btn-control" id="pause-btn" onclick="toggleTimer()">⏸ PAUSE</button>
+                    <div class="timer-container">
+                        <div class="timer-bar" id="timer-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 10px; display: flex; justify-content: space-between;">
+                <button class="btn" style="background: rgba(255,255,255,0.2); color: #fff; box-shadow: none;"
+                    onclick="showScreen('level-screen')">🚪 Quit Round</button>
+                <button class="btn btn-medium" id="next-btn" onclick="nextQuestion()" style="display: none;">Next
+                    ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rescue-screen" class="screen">
+        <div class="panel-3d">
+            <div class="quiz-header">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div id="rescue-q-display" style="font-family: 'Fredoka One', cursive; font-size: 1.5rem; color: var(--text-yellow);">Question 01</div>
+                    <select id="rescue-q-selector" class="q-selector" onchange="jumpToRescueQuestion(this.value)"></select>
+                </div>
+                <div class="badge" style="background: var(--rescue); color: #fff;">RESCUE ROUND</div>
+            </div>
+
+            <div class="question-text">
+                <span class="question-emoji" id="rescue-q-emoji">🛟</span>
+                <span id="rescue-question-text">Question?</span>
+            </div>
+
+            <div class="action-area" id="rescue-action-area">
+                <div id="rescue-countdown-overlay" class="countdown-overlay">
+                    <div class="countdown-number" id="rescue-countdown-number">3</div>
+                </div>
+
+                <div style="margin-bottom: 25px; font-weight: 800; color: var(--text-yellow); font-size: 1.2rem;"
+                    id="rescue-rule">Rule here</div>
+                <button class="btn btn-medium" id="reveal-btn" onclick="revealRescueAnswer()">👁️ REVEAL ANSWER</button>
+                <div id="rescue-answer" class="rescue-answer-area"></div>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; justify-content: space-between;">
+                <button class="btn" style="background: rgba(255,255,255,0.2); color: #fff; box-shadow: none;"
+                    onclick="showScreen('level-screen')">🚪 Quit</button>
+                <button class="btn btn-easy" onclick="nextRescueQuestion()">Next ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="minigame-screen" class="screen">
+        <div class="panel-3d">
+            <div class="quiz-header">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div id="minigame-q-display" style="font-family: 'Fredoka One', cursive; font-size: 1.5rem; color: var(--text-yellow);">Question 01</div>
+                    <select id="minigame-q-selector" class="q-selector" onchange="jumpToMinigameQuestion(this.value)"></select>
+                </div>
+                <div class="badge" style="background: #a020f0; color: #fff;">MINIGAME</div>
+            </div>
+
+            <div class="question-text">
+                <span class="question-emoji" id="minigame-q-emoji">🎮</span>
+                <span id="minigame-question-text" style="white-space: pre-line;">Question?</span>
+            </div>
+
+            <div class="action-area" id="minigame-action-area">
+                <div class="options-grid" id="minigame-options-grid" style="display: none;"></div>
+                <button class="btn btn-medium" id="minigame-reveal-btn" onclick="revealMinigameAnswer()" style="display: none;">👁️ REVEAL ANSWER</button>
+                <div id="minigame-answer" class="rescue-answer-area"></div>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; justify-content: space-between;">
+                <button class="btn" style="background: rgba(255,255,255,0.2); color: #fff; box-shadow: none;"
+                    onclick="showScreen('level-screen')">🚪 Quit</button>
+                <button class="btn btn-easy" id="minigame-next-btn" onclick="nextMinigameQuestion()" style="display: none;">Next ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rules Modal -->
+    <div class="modal-overlay" id="rules-modal">
+        <div class="modal-content">
+            <button class="modal-close-btn" onclick="toggleRules()">✖</button>
+            <h2>COMPETITION RULES</h2>
+            
+            <h3>I. FORMAT & OVERVIEW</h3>
+            <ul>
+                <li>100 contestants will participate in 3 main rounds similar to the "Golden Bell" format.</li>
+                <li>Contestants answer by showing their boards within the time limit.</li>
+                <li>Official answers must match the program's. The Organizer's decision is final in all situations.</li>
+            </ul>
+
+            <h3>II. VIOLATIONS</h3>
+            <ul>
+                <li>Cheating, using phones, or bringing A/V devices will result in immediate disqualification.</li>
+                <li>Contestants are not allowed to discuss on the stage.</li>
+                <li>If a class's supporter prompts the answer, their contestant will be disqualified immediately.</li>
+            </ul>
+
+            <h3>III. ROUNDS OVERVIEW</h3>
+            <ul>
+                <li><b>Round 1 (Easy):</b> 15s/question. Incorrect answers lead to temporary elimination. Plays until &lt; 40 left.</li>
+                <li><b>Round 2 (Medium):</b> 20s/question. Incorrect answers lead to temporary elimination. Plays until 5 left.</li>
+                <li><b>Round 3 (Hard):</b> 30s/question. Incorrect answers lead to elimination. Plays until the winner is found.</li>
+                <li><b>Rescue Round:</b> Organized if too many are eliminated. A minigame helps select exactly 5 contestants to return.</li>
+            </ul>
+
+            <h3>IV. SUPPORTER GUIDELINES</h3>
+            <ul>
+                <li>Maintain order during the competition. Do NOT reveal answers.</li>
+                <li>Prompting will lead to immediate disqualification of your class's contestant.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // --- Âm thanh (Sound Effects) ---
+        const sfxClick = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+        const sfxCorrect = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
+        const sfxWrong = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3');
+        const sfxReveal = new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
+        const bgMusic = new Audio('https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3');
+
+        bgMusic.loop = true;
+        bgMusic.volume = 0.15;
+
+        function playSound(audio) {
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('Audio error:', e));
+        }
+
+        // --- Bắt tương tác đầu tiên để bật nhạc nền ---
+        document.addEventListener('click', () => {
+            if (bgMusic.paused) bgMusic.play().catch(e => console.log(e));
+        }, { once: true });
+
+        // --- DATABASE CÂU HỎI (FULL 120 CÂU) ---
+        const quizData = {
+            easy: [
+                { q: "The company decided to _______ the launch of the new product until next month.", options: ["put off", "call off", "take off", "set off"], correct: 0 },
+                { q: "If I _______ more time, I would participate in the Vovinam competition.", options: ["have", "had", "have had", "will have"], correct: 1 },
+                { q: "Most students enjoy _______ code because it allows them to create interactive apps.", options: ["to write", "write", "writing", "written"], correct: 2 },
+                { q: "The software _______ by our team last week is running smoothly.", options: ["develop", "developing", "developed", "was developed"], correct: 2 },
+                { q: "She is very _______; she always finishes her assignments before the deadline.", options: ["reliable", "competitive", "creative", "ambitious"], correct: 0 },
+                { q: "If I _______ more time, I would learn another language.", options: ["have", "had", "will have", "having"], correct: 1 },
+                { q: "She has lived here _______ 2010.", options: ["Since", "for", "from", "during"], correct: 0 },
+                { q: "They _______ dinner when I arrived.", options: ["have", "had", "were having", "are having"], correct: 2 },
+                { q: "I enjoy _______ books in my free time.", options: ["read", "to read", "reading", "reads"], correct: 2 },
+                { q: "He _______ to school every day.", options: ["go", "goes", "going", "gone"], correct: 1 },
+                { q: "Which of the following is the largest country in the world by land area?", options: ["Canada", "China", "Russia", "The USA"], correct: 2 },
+                { q: "The Amazon Rainforest is located in _______.", options: ["Africa", "South America", "Southeast Asia", "Australia"], correct: 1 },
+                { q: "_______ is the study of weather patterns and climate conditions.", options: ["Geology", "Meteorology", "Biology", "Archaeology"], correct: 1 },
+                { q: "Which city is known as the \"Big Apple\"?", options: ["London", "Los Angeles", "New York City", "Sydney"], correct: 2 },
+                { q: "The _______ Canal connects the Atlantic Ocean and the Pacific Ocean.", options: ["Suez", "Panama", "Kiel", "Corinth"], correct: 1 },
+                { q: "Which is the longest river in the world?", options: ["Amazon River", "Nile River", "Yangtze River", "Mississippi River"], correct: 1 },
+                { q: "What is the capital city of Japan?", options: ["Seoul", "Bangkok", "Beijing", "Tokyo"], correct: 3 },
+                { q: "The Great Wall is located in which country?", options: ["India", "China", "Korea", "Japan"], correct: 1 },
+                { q: "Which continent is the Sahara Desert located in?", options: ["Asia", "Africa", "Australia", "Europe"], correct: 1 },
+                { q: "Which is considered a renewable energy source?", options: ["Coal", "Oil", "Solar energy", "Gas"], correct: 2 },
+                { q: "The Renaissance was a period of significant _______ growth in Europe.", options: ["industrial", "agricultural", "cultural", "military"], correct: 2 },
+                { q: "Who was the primary author of the American Declaration of Independence?", options: ["George Washington", "Thomas Jefferson", "Abraham Lincoln", "Benjamin Franklin"], correct: 1 },
+                { q: "The _______ is a traditional Japanese garment worn on formal occasions.", options: ["Hanbok", "Kimono", "Sari", "Cheongsam"], correct: 1 },
+                { q: "In 1945, the United Nations was established to promote international _______.", options: ["trade", "cooperation", "competition", "exploration"], correct: 1 },
+                { q: "Culinary _______ refers to traditional cooking styles.", options: ["heritage", "industry", "technology", "economy"], correct: 0 },
+                { q: "Who was the first President of the United States?", options: ["Abraham Lincoln", "George Washington", "Thomas Jefferson", "John Adams"], correct: 1 },
+                { q: "Which festival is known as the \"Festival of Lights\"?", options: ["Christmas", "Halloween", "Easter", "Diwali"], correct: 3 },
+                { q: "Which food is traditionally from Italy?", options: ["Sushi", "Pizza", "Kimchi", "Pho"], correct: 1 },
+                { q: "World War II ended in:", options: ["1940", "1942", "1945", "1950"], correct: 2 },
+                { q: "The _______ is a traditional Vietnamese martial art.", options: ["Karate", "Taekwondo", "Vovinam", "Judo"], correct: 2 },
+                { q: "_______ is the process by which green plants make food.", options: ["Respiration", "Digestion", "Photosynthesis", "Fermentation"], correct: 2 },
+                { q: "DNA stands for _______ acid.", options: ["Deoxyribonucleic", "Ribonucleic", "Amino", "Hydrochloric"], correct: 0 },
+                { q: "The _______ system protects the body.", options: ["nervous", "immune", "digestive", "respiratory"], correct: 1 },
+                { q: "Mammals are _______.", options: ["cold-blooded", "warm-blooded", "amphibians", "reptiles"], correct: 1 },
+                { q: "Which organ filters blood?", options: ["Heart", "Lungs", "Kidneys", "Stomach"], correct: 2 },
+                { q: "Which part of the plant makes food?", options: ["Root", "Stem", "Leaf", "Flower"], correct: 2 },
+                { q: "Humans need oxygen to _______.", options: ["eat", "breathe", "drink", "sleep"], correct: 1 },
+                { q: "Which organ pumps blood?", options: ["Brain", "Lung", "Heart", "Liver"], correct: 2 },
+                { q: "DNA is found in the _______.", options: ["Nucleus", "Wall", "Membrane", "Cytoplasm"], correct: 0 },
+                { q: "Photosynthesis occurs in _______.", options: ["Mitochondria", "Chloroplast", "Ribosome", "Vacuole"], correct: 1 },
+                { q: "_______ development focuses on future needs.", options: ["Economic", "Sustainable", "Urban", "Rapid"], correct: 1 },
+                { q: "In a _______ economy, prices depend on supply and demand.", options: ["planned", "market", "traditional", "command"], correct: 1 },
+                { q: "Consumer _______ studies buying habits.", options: ["behavior", "interest", "wealth", "power"], correct: 0 },
+                { q: "Artificial _______ (AI) is transforming technology.", options: ["Information", "Intelligence", "Industry", "Integration"], correct: 1 },
+                { q: "Globalization increases cultural _______.", options: ["isolation", "exchange", "conflict", "distance"], correct: 1 },
+                { q: "Closest meaning to \"rapid\":", options: ["Slow", "Fast", "Late", "Weak"], correct: 1 },
+                { q: "Synonym of \"important\":", options: ["Necessary", "Small", "Weak", "Short"], correct: 0 },
+                { q: "Opposite of \"increase\":", options: ["Grow", "Decrease", "Rise", "Expand"], correct: 1 },
+                { q: "\"Volunteer\" means:", options: ["Work for money", "Work alone", "Work abroad", "Work for free"], correct: 3 },
+                { q: "\"Environment\" means:", options: ["People", "Surroundings", "Language", "Weather only"], correct: 1 }
+            ],
+            medium: [
+                { q: "The manager decided to _______ the meeting due to unexpected issues.", options: ["call off", "put up", "turn on", "bring about"], correct: 0 },
+                { q: "If he _______ more carefully, he wouldn't have made that mistake.", options: ["works", "worked", "had worked", "has worked"], correct: 2 },
+                { q: "Many students prefer _______ online courses because of flexibility.", options: ["take", "taking", "to taking", "took"], correct: 1 },
+                { q: "The report _______ by the research team contains valuable data.", options: ["preparing", "prepared", "to prepare", "prepare"], correct: 1 },
+                { q: "She is extremely _______ and always meets deadlines.", options: ["reliable", "curious", "generous", "sensitive"], correct: 0 },
+                { q: "I wish I _______ how to solve this problem earlier.", options: ["know", "knew", "had known", "have known"], correct: 2 },
+                { q: "He has been working here _______ five years.", options: ["since", "for", "during", "while"], correct: 1 },
+                { q: "They _______ when the teacher entered the classroom.", options: ["talk", "talked", "were talking", "have talked"], correct: 2 },
+                { q: "I'm interested in _______ how artificial intelligence works.", options: ["learn", "learned", "learning", "to learning"], correct: 2 },
+                { q: "She rarely _______ mistakes in her work.", options: ["make", "makes", "making", "made"], correct: 1 },
+                { q: "Which country has the largest population in the world?", options: ["India", "China", "USA", "Indonesia"], correct: 0 },
+                { q: "The Amazon River flows primarily through which country?", options: ["Peru", "Colombia", "Brazil", "Venezuela"], correct: 2 },
+                { q: "_______ refers to long-term patterns of temperature and weather.", options: ["Climate", "Forecast", "Atmosphere", "Season"], correct: 0 },
+                { q: "Which city is known for being built on canals?", options: ["Paris", "Venice", "Tokyo", "Cairo"], correct: 1 },
+                { q: "The Suez Canal connects the Mediterranean Sea with the _______.", options: ["Black Sea", "Red Sea", "Arabian Sea", "Caspian Sea"], correct: 1 },
+                { q: "Which mountain range separates Europe and Asia?", options: ["Andes", "Himalayas", "Alps", "Ural Mountains"], correct: 3 },
+                { q: "What is the capital of Australia?", options: ["Sydney", "Melbourne", "Canberra", "Brisbane"], correct: 2 },
+                { q: "The Great Barrier Reef is located in _______.", options: ["Indonesia", "Philippines", "Australia", "Malaysia"], correct: 2 },
+                { q: "Which desert is the largest hot desert in the world?", options: ["Gobi", "Sahara", "Kalahari", "Arabian"], correct: 1 },
+                { q: "Which energy source is considered non-renewable?", options: ["Wind", "Solar", "Coal", "Hydro"], correct: 2 },
+                { q: "The Industrial Revolution began in _______.", options: ["France", "Germany", "Britain", "Italy"], correct: 2 },
+                { q: "Who was the leader of the civil rights movement in the U.S.?", options: ["Nelson Mandela", "Martin Luther King Jr.", "Barack Obama", "Malcolm X"], correct: 1 },
+                { q: "The traditional Korean dress is called _______.", options: ["Kimono", "Hanbok", "Ao Dai", "Sari"], correct: 1 },
+                { q: "The United Nations aims to maintain international _______.", options: ["war", "peace", "trade", "control"], correct: 1 },
+                { q: "Cultural diversity refers to the _______ of different cultures.", options: ["loss", "mixing", "variety", "similarity"], correct: 2 },
+                { q: "Who discovered America in 1492?", options: ["Vasco da Gama", "Christopher Columbus", "Ferdinand Magellan", "James Cook"], correct: 1 },
+                { q: "Which festival celebrates the lunar new year in Vietnam?", options: ["Mid-Autumn Festival", "Tet", "Christmas", "Halloween"], correct: 1 },
+                { q: "Which cuisine is sushi associated with?", options: ["Korean", "Chinese", "Japanese", "Thai"], correct: 2 },
+                { q: "The Cold War was mainly between the USA and the _______.", options: ["China", "Germany", "Soviet Union", "Japan"], correct: 2 },
+                { q: "Which art form involves performing movements to music?", options: ["Painting", "Sculpture", "Dance", "Literature"], correct: 2 },
+                { q: "Photosynthesis mainly occurs in the _______ of plant cells.", options: ["mitochondria", "chloroplasts", "nucleus", "membrane"], correct: 1 },
+                { q: "DNA carries genetic _______.", options: ["energy", "material", "information", "structure"], correct: 2 },
+                { q: "The _______ system controls body activities and responses.", options: ["digestive", "nervous", "respiratory", "circulatory"], correct: 1 },
+                { q: "Birds are classified as _______.", options: ["mammals", "reptiles", "warm-blooded animals", "amphibians"], correct: 2 },
+                { q: "The heart is responsible for _______ blood throughout the body.", options: ["filtering", "pumping", "storing", "producing"], correct: 1 },
+                { q: "The process of breaking down food is called _______.", options: ["respiration", "digestion", "absorption", "circulation"], correct: 1 },
+                { q: "Humans inhale oxygen and exhale _______.", options: ["nitrogen", "hydrogen", "carbon dioxide", "oxygen"], correct: 2 },
+                { q: "The brain is part of the _______ system.", options: ["immune", "nervous", "skeletal", "digestive"], correct: 1 },
+                { q: "Cells are the basic unit of _______.", options: ["energy", "life", "tissue", "organ"], correct: 1 },
+                { q: "Enzymes act as biological _______.", options: ["fuels", "catalysts", "tissues", "cells"], correct: 1 },
+                { q: "_______ development ensures resources for future generations.", options: ["Economic", "Sustainable", "Industrial", "Financial"], correct: 1 },
+                { q: "In a market economy, prices are determined by _______.", options: ["government", "tradition", "supply and demand", "law"], correct: 2 },
+                { q: "Consumer behavior focuses on how people _______ goods and services.", options: ["produce", "sell", "buy", "transport"], correct: 2 },
+                { q: "Artificial Intelligence refers to machines that can _______.", options: ["think and learn", "eat and drink", "grow naturally", "reproduce"], correct: 0 },
+                { q: "Globalization encourages cultural _______.", options: ["isolation", "exchange", "separation", "conflict"], correct: 1 },
+                { q: "Closest meaning to \"efficient\":", options: ["slow", "productive", "weak", "careless"], correct: 1 },
+                { q: "Synonym of \"significant\":", options: ["important", "small", "unclear", "simple"], correct: 0 },
+                { q: "Opposite of \"expand\":", options: ["increase", "develop", "reduce", "grow"], correct: 2 },
+                { q: "\"Entrepreneur\" means:", options: ["a worker", "a business owner", "a student", "a teacher"], correct: 1 },
+                { q: "\"Innovation\" refers to:", options: ["repetition", "creativity and new ideas", "tradition", "habit"], correct: 1 }
+            ],
+            hard: [
+                { q: "The committee decided to ______ the proposal after identifying several inconsistencies.", options: ["endorse", "ratify", "repudiate", "comply"], correct: 2 },
+                { q: "Her argument was so ______ that even her critics were persuaded.", options: ["tenuous", "cogent", "ambiguous", "superficial"], correct: 1 },
+                { q: "The new regulations aim to ______ environmental degradation.", options: ["exacerbate", "mitigate", "instigate", "terminate"], correct: 1 },
+                { q: "He remained ______ in his position despite overwhelming opposition.", options: ["flexible", "resolute", "indifferent", "tentative"], correct: 1 },
+                { q: "The professor's lecture was highly ______, drawing connections across multiple disciplines.", options: ["redundant", "interdisciplinary", "obsolete", "arbitrary"], correct: 1 },
+                { q: "Which ocean current is primarily responsible for moderating the climate of Western Europe?", options: ["Humboldt Current", "Gulf Stream", "Canary Current", "Benguela Current"], correct: 1 },
+                { q: "Which mountain range was formed as a result of the collision between the Indian and Eurasian tectonic plates?", options: ["Andes", "Rockies", "Alps", "Himalayas"], correct: 3 },
+                { q: "The Treaty of Versailles is often cited as a contributing factor to which major historical event?", options: ["The Russian Revolution", "World War II", "The Cold War", "The Industrial Revolution"], correct: 1 },
+                { q: "Who was the primary author of the Declaration of Independence?", options: ["George Washington", "Benjamin Franklin", "Thomas Jefferson", "John Adams"], correct: 2 },
+                { q: "The fall of the Berlin Wall symbolized the decline of what broader geopolitical era?", options: ["The Renaissance", "The Enlightenment", "The Cold War", "The Industrial Age"], correct: 2 },
+                { q: "Which cellular organelle is primarily responsible for aerobic respiration and ATP production?", options: ["Nucleus", "Ribosome", "Mitochondrion", "Lysosome"], correct: 2 },
+                { q: "The process by which organisms maintain a stable internal environment is known as ______.", options: ["metabolism", "homeostasis", "adaptation", "evolution"], correct: 1 },
+                { q: "Which biomolecule carries genetic information in most living organisms?", options: ["Protein", "Lipid", "DNA", "Carbohydrate"], correct: 2 },
+                { q: "Natural selection, a key mechanism of evolution, was most prominently associated with which scientist?", options: ["Gregor Mendel", "Charles Darwin", "Louis Pasteur", "Isaac Newton"], correct: 1 },
+                { q: "Which system in the human body is primarily responsible for transporting oxygen, nutrients, and waste products?", options: ["Nervous system", "Digestive system", "Circulatory system", "Endocrine system"], correct: 2 }
+            ],
+            rescue: [
+                { q: "List the 8 planets in our Solar System in order from the Sun.", rule: "Must name at least 5/8 planets in correct order to survive.", ans: "Mercury → Venus → Earth → Mars →\nJupiter → Saturn → Uranus → Neptune" },
+                { q: "List all prime numbers less than 30.", rule: "Must name at least 7/10 to survive.\nWriting any non-prime number = immediately eliminated.", ans: "2, 3, 5, 7, 11, 13, 17, 19, 23, 29" },
+                { q: "List all 7 continents on Earth.", rule: "Must name at least 4/7 continents to survive.", ans: "Asia, Africa, North America, South America,\nAntarctica, Europe, Australia/Oceania" },
+                { q: "List all the colors of the rainbow in correct order.", rule: "Must name ALL 7 colors in correct order to survive.", ans: "Red → Orange → Yellow → Green →\nBlue → Indigo → Violet" },
+                { q: "List as many official Disney Princesses as you can.", rule: "Must name 8/13 or more to survive.\nIf too many survive → raise threshold to 10/13.", ans: "Snow White, Cinderella, Aurora, Ariel, Belle, Jasmine, Pocahontas, Mulan, Tiana, Rapunzel, Merida, Moana, Raya" }
+            ],
+            minigame: [
+                { type: 'mcq', q: "Which habit contributes most to maintaining good physical health?", options: ["Regular exercise", "Skipping meals", "Staying up late frequently", "Avoiding physical activity"], correct: 0 },
+                { type: 'text', q: "Fill in the blank:\n“A person who is willing to listen to others and accept different opinions is considered ________.”", ans: "open-minded / understanding / tolerant" },
+                { type: 'mcq', q: "What is the primary purpose of using cloud storage?", options: ["To store data online and access it from anywhere", "To improve battery life", "To replace internet connection", "To increase screen size"], correct: 0 },
+                { type: 'mcq', q: "Which of the following is the most effective way to reduce stress?", options: ["Ignoring problems", "Engaging in relaxing activities (e.g., exercise, meditation)", "Overworking continuously", "Avoiding communication"], correct: 1 },
+                { type: 'text', q: "Fill in the blank:\n“In the digital age, it is important to use technology ________ to protect personal information.”", ans: "responsibly / wisely / carefully" }
+            ]
+        };
+
+        const config = {
+            easy: { color: 'var(--easy)', time: 15 },
+            medium: { color: 'var(--medium)', time: 20 },
+            hard: { color: 'var(--hard)', time: 30 }
+        };
+
+        // --- Shuffle (Trộn thứ tự) câu hỏi cho mọi vòng chơi ---
+        for (let level in quizData) {
+            let arr = quizData[level];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        let currentLevel = '';
+        let currentQIndex = 0;
+        let isAnswered = false;
+
+        let timerMax = 0;
+        let timeLeft = 0;
+        let timerInterval = null;
+        let isPaused = false;
+        let countdownTimer = null;
+
+        function getEmojiForQuestion(qText) {
+            const txt = qText.toLowerCase();
+            if (txt.includes('plant') || txt.includes('photosynthesis') || txt.includes('rainforest') || txt.includes('leaf') || txt.includes('stem') || txt.includes('root')) return '🌿';
+            if (txt.includes('country') || txt.includes('world') || txt.includes('continent') || txt.includes('earth') || txt.includes('global')) return '🌍';
+            if (txt.includes('code') || txt.includes('software') || txt.includes('ai ') || txt.includes('technology') || txt.includes('intelligence')) return '💻';
+            if (txt.includes('water') || txt.includes('river') || txt.includes('ocean') || txt.includes('sea')) return '🌊';
+            if (txt.includes('food') || txt.includes('dinner') || txt.includes('pizza') || txt.includes('sushi') || txt.includes('eat')) return '🍕';
+            if (txt.includes('history') || txt.includes('war') || txt.includes('president') || txt.includes('treaty') || txt.includes('revolution')) return '📜';
+            if (txt.includes('math') || txt.includes('prime') || txt.includes('number')) return '🔢';
+            if (txt.includes('body') || txt.includes('blood') || txt.includes('heart') || txt.includes('dna') || txt.includes('organ') || txt.includes('cell')) return '🧬';
+            if (txt.includes('animal') || txt.includes('bird') || txt.includes('mammal')) return '🦁';
+            if (txt.includes('sun') || txt.includes('solar') || txt.includes('planet')) return '🪐';
+            if (txt.includes('money') || txt.includes('economy') || txt.includes('business')) return '💰';
+            if (txt.includes('time') || txt.includes('month') || txt.includes('year')) return '⏰';
+            if (txt.includes('art') || txt.includes('culture') || txt.includes('dance')) return '🎭';
+            return '🤔';
+        }
+
+        function toggleRules() {
+            playSound(sfxClick);
+            const modal = document.getElementById('rules-modal');
+            modal.classList.toggle('active');
+        }
+
+        function showScreen(screenId) {
+            playSound(sfxClick);
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            clearInterval(timerInterval);
+            clearInterval(countdownTimer);
+        }
+
+        function populateSelector(level, selectorId) {
+            const selector = document.getElementById(selectorId);
+            selector.innerHTML = '';
+            const total = quizData[level].length;
+            for (let i = 0; i < total; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.innerText = `Question ${i + 1} / ${total}`;
+                selector.appendChild(opt);
+            }
+        }
+
+        function startRound(level) {
+            currentLevel = level;
+            currentQIndex = 0;
+
+            if (level === 'rescue') {
+                showScreen('rescue-screen');
+                populateSelector('rescue', 'rescue-q-selector');
+                loadRescueQuestion();
+            } else if (level === 'minigame') {
+                showScreen('minigame-screen');
+                populateSelector('minigame', 'minigame-q-selector');
+                loadMinigameQuestion();
+            } else {
+                showScreen('quiz-screen');
+                setupQuizTheme(level);
+                populateSelector(level, 'q-selector');
+                loadQuestion();
+            }
+        }
+
+        function jumpToQuestion(index) {
+            currentQIndex = parseInt(index);
+            loadQuestion();
+        }
+
+        function jumpToRescueQuestion(index) {
+            currentQIndex = parseInt(index);
+            loadRescueQuestion();
+        }
+
+        function setupQuizTheme(level) {
+            const badge = document.getElementById('round-badge');
+            badge.innerText = currentLevel.toUpperCase() + ' ROUND';
+            badge.style.background = `linear-gradient(145deg, rgba(255,255,255,0.25), transparent), ${config[level].color}`;
+            badge.style.color = 'white';
+        }
+
+        function runCountdown(overlayId, numberId, callback) {
+            clearInterval(countdownTimer);
+            clearInterval(timerInterval);
+
+            const overlay = document.getElementById(overlayId);
+            const numEl = document.getElementById(numberId);
+
+            overlay.style.display = 'flex';
+            let count = 3;
+            numEl.innerText = count;
+            numEl.style.color = "var(--text-yellow)";
+
+            numEl.classList.remove('pop-anim');
+            void numEl.offsetWidth;
+            numEl.classList.add('pop-anim');
+
+            countdownTimer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    numEl.innerText = count;
+                    numEl.classList.remove('pop-anim');
+                    void numEl.offsetWidth;
+                    numEl.classList.add('pop-anim');
+                } else if (count === 0) {
+                    numEl.innerText = "GO!";
+                    numEl.style.color = "var(--easy)";
+                    numEl.classList.remove('pop-anim');
+                    void numEl.offsetWidth;
+                    numEl.classList.add('pop-anim');
+                } else {
+                    clearInterval(countdownTimer);
+                    overlay.style.display = 'none';
+                    if (callback) callback();
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            isAnswered = true;
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('q-selector').value = currentQIndex;
+            
+            const displayNum = (currentQIndex + 1).toString().padStart(2, '0');
+            document.getElementById('q-display').innerText = `Question ${displayNum}`;
+
+            document.getElementById('timer-bar').style.width = '100%';
+            document.getElementById('timer-bar').style.background = 'linear-gradient(90deg, var(--text-yellow), var(--text-orange))';
+            document.getElementById('pause-btn').innerText = '⏸ PAUSE';
+            document.getElementById('pause-btn').classList.remove('paused');
+
+            const qData = quizData[currentLevel][currentQIndex];
+
+            document.getElementById('q-emoji').innerText = getEmojiForQuestion(qData.q);
+            document.getElementById('q-text-content').innerText = qData.q;
+
+            const optionsGrid = document.getElementById('options-grid');
+            optionsGrid.innerHTML = '';
+
+            const letters = ['A', 'B', 'C', 'D'];
+            qData.options.forEach((opt, index) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.innerHTML = `<span class="opt-letter">${letters[index]}</span> ${opt}`;
+                div.onclick = () => checkAnswer(index, div);
+                optionsGrid.appendChild(div);
+            });
+
+            runCountdown('countdown-overlay', 'countdown-number', () => {
+                isAnswered = false;
+                startJSTimer(config[currentLevel].time);
+            });
+        }
+
+        function checkAnswer(selectedIndex, element) {
+            if (isAnswered) return;
+            isAnswered = true;
+            clearInterval(timerInterval);
+
+            const qData = quizData[currentLevel][currentQIndex];
+            const options = document.querySelectorAll('.option');
+
+            if (selectedIndex === qData.correct) {
+                element.classList.add('correct');
+                playSound(sfxCorrect);
+            } else {
+                element.classList.add('wrong');
+                options[qData.correct].classList.add('correct');
+                playSound(sfxWrong);
+            }
+
+            document.getElementById('next-btn').style.display = 'block';
+        }
+
+        function nextQuestion() {
+            playSound(sfxClick);
+            currentQIndex++;
+            if (currentQIndex < quizData[currentLevel].length) {
+                loadQuestion();
+            } else {
+                alert(`Round Complete! Great job.`);
+                showScreen('level-screen');
+            }
+        }
+
+        function loadRescueQuestion() {
+            isAnswered = false;
+            document.getElementById('rescue-q-selector').value = currentQIndex;
+            
+            const displayNum = (currentQIndex + 1).toString().padStart(2, '0');
+            document.getElementById('rescue-q-display').innerText = `Question ${displayNum}`;
+            const qData = quizData['rescue'][currentQIndex];
+
+            document.getElementById('rescue-q-emoji').innerText = getEmojiForQuestion(qData.q);
+            document.getElementById('rescue-question-text').innerText = qData.q;
+            document.getElementById('rescue-rule').innerText = `⚠️ ELIMINATION RULE: ${qData.rule}`;
+
+            const ansArea = document.getElementById('rescue-answer');
+            ansArea.style.display = 'none';
+            ansArea.innerText = `✅ CORRECT ANSWER:\n${qData.ans}`;
+
+            document.getElementById('reveal-btn').style.display = 'inline-block';
+        }
+
+        function revealRescueAnswer() {
+            if (isAnswered) return;
+            playSound(sfxReveal);
+            document.getElementById('rescue-answer').style.display = 'block';
+            document.getElementById('reveal-btn').style.display = 'none';
+        }
+
+        function nextRescueQuestion() {
+            playSound(sfxClick);
+            currentQIndex++;
+            if (currentQIndex < quizData['rescue'].length) {
+                loadRescueQuestion();
+            } else {
+                alert("Rescue Round Finished!");
+                showScreen('level-screen');
+            }
+        }
+
+        function jumpToMinigameQuestion(index) {
+            currentQIndex = parseInt(index);
+            loadMinigameQuestion();
+        }
+
+        function loadMinigameQuestion() {
+            isAnswered = false; 
+            document.getElementById('minigame-q-selector').value = currentQIndex;
+            
+            const displayNum = (currentQIndex + 1).toString().padStart(2, '0');
+            document.getElementById('minigame-q-display').innerText = `Question ${displayNum}`;
+            const qData = quizData['minigame'][currentQIndex];
+
+            document.getElementById('minigame-question-text').innerText = qData.q;
+            
+            const optionsGrid = document.getElementById('minigame-options-grid');
+            const revealBtn = document.getElementById('minigame-reveal-btn');
+            const ansArea = document.getElementById('minigame-answer');
+            const nextBtn = document.getElementById('minigame-next-btn');
+
+            ansArea.style.display = 'none';
+            nextBtn.style.display = 'none';
+
+            if (qData.type === 'mcq') {
+                optionsGrid.style.display = 'grid';
+                revealBtn.style.display = 'none';
+                optionsGrid.innerHTML = '';
+                const letters = ['A', 'B', 'C', 'D'];
+                qData.options.forEach((opt, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'option';
+                    div.innerHTML = `<span class="opt-letter">${letters[index]}</span> ${opt}`;
+                    div.onclick = () => checkMinigameAnswer(index, div, qData);
+                    optionsGrid.appendChild(div);
+                });
+            } else {
+                optionsGrid.style.display = 'none';
+                revealBtn.style.display = 'inline-block';
+                ansArea.innerText = `✅ SUGGESTED ANSWER:\n${qData.ans}`;
+            }
+        }
+
+        function checkMinigameAnswer(selectedIndex, element, qData) {
+            if (isAnswered) return;
+            isAnswered = true; 
+            const options = document.getElementById('minigame-options-grid').querySelectorAll('.option');
+
+            if (selectedIndex === qData.correct) {
+                element.classList.add('correct');
+                playSound(sfxCorrect);
+            } else {
+                element.classList.add('wrong');
+                options[qData.correct].classList.add('correct');
+                playSound(sfxWrong);
+            }
+            document.getElementById('minigame-next-btn').style.display = 'block';
+        }
+
+        function revealMinigameAnswer() {
+            if (isAnswered) return;
+            isAnswered = true; 
+            playSound(sfxReveal);
+            document.getElementById('minigame-answer').style.display = 'block';
+            document.getElementById('minigame-reveal-btn').style.display = 'none';
+            document.getElementById('minigame-next-btn').style.display = 'block';
+        }
+
+        function nextMinigameQuestion() {
+            playSound(sfxClick);
+            currentQIndex++;
+            if (currentQIndex < quizData['minigame'].length) {
+                loadMinigameQuestion();
+            } else {
+                alert("Minigame Finished!");
+                showScreen('level-screen');
+            }
+        }
+
+        function startJSTimer(seconds) {
+            clearInterval(timerInterval);
+            timerMax = seconds;
+            timeLeft = seconds;
+            isPaused = false;
+            let lastUpdate = Date.now();
+            updateTimerUI();
+
+            timerInterval = setInterval(() => {
+                let now = Date.now();
+                if (!isPaused && !isAnswered) {
+                    timeLeft -= (now - lastUpdate) / 1000;
+                    lastUpdate = now;
+                    updateTimerUI();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        timeOut();
+                    }
+                } else {
+                    lastUpdate = now;
+                }
+            }, 16);
+        }
+
+        function updateTimerUI() {
+            const bar = document.getElementById('timer-bar');
+            let percent = (timeLeft / timerMax) * 100;
+            if (percent < 0) percent = 0;
+            bar.style.width = percent + '%';
+
+            if (percent < 25) bar.style.background = 'var(--hard)';
+            else bar.style.background = 'linear-gradient(90deg, var(--text-yellow), var(--text-orange))';
+        }
+
+        function toggleTimer() {
+            if (isAnswered) return;
+            playSound(sfxClick);
+            isPaused = !isPaused;
+            const btn = document.getElementById('pause-btn');
+            if (isPaused) {
+                btn.innerText = '▶ RESUME';
+                btn.classList.add('paused');
+            } else {
+                btn.innerText = '⏸ PAUSE';
+                btn.classList.remove('paused');
+            }
+        }
+
+        function timeOut() {
+            if (isAnswered) return;
+            isAnswered = true;
+            playSound(sfxWrong);
+            const qData = quizData[currentLevel][currentQIndex];
+            document.querySelectorAll('.option')[qData.correct].classList.add('correct');
+            document.getElementById('next-btn').style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>
